@@ -1,44 +1,34 @@
-import { Value } from "../types";
-import { node } from "./node";
+import { exec } from "child_process";
+import { delay } from "./src/utils";
 
-export async function launchNodes(
-  N: number, // total number of nodes in the network
-  F: number, // number of faulty nodes in the network
-  initialValues: Value[], // initial values of each node
-  faultyList: boolean[] // list of faulty values for each node, true if the node is faulty, false otherwise
+const BASE_PORT = 3000;
+
+/**
+ * Lance plusieurs nœuds du réseau.
+ * @param totalNodes Nombre total de nœuds à lancer
+ * @param faultyNodes Nombre de nœuds fautifs
+ * @param initialValues Valeurs initiales des nœuds
+ * @param faultyArray Tableau indiquant quels nœuds sont fautifs (true/false)
+ */
+export async function launchNetwork(
+  totalNodes: number,
+  faultyNodes: number,
+  initialValues: number[],
+  faultyArray: boolean[]
 ) {
-  if (initialValues.length !== faultyList.length || N !== initialValues.length)
-    throw new Error("Arrays don't match");
-  if (faultyList.filter((el) => el === true).length !== F)
-    throw new Error("faultyList doesnt have F faulties");
+  console.log(`🚀 Launching ${totalNodes} nodes...`);
 
-  const promises = [];
+  for (let i = 0; i < totalNodes; i++) {
+    const initialState = initialValues[i];
+    const isFaulty = faultyArray[i] ? "faulty" : "honest";
 
-  const nodesStates = new Array(N).fill(false);
+    const command = `node ./src/nodes/node.ts ${i} ${initialState} ${totalNodes} ${isFaulty}`;
+    const process = exec(command);
 
-  function nodesAreReady() {
-    return nodesStates.find((el) => el === false) === undefined;
+    process.stdout?.on("data", (data) => console.log(`🟢 Node ${i}: ${data}`));
+    process.stderr?.on("data", (data) => console.error(`🔴 Node ${i} ERROR: ${data}`));
   }
 
-  function setNodeIsReady(index: number) {
-    nodesStates[index] = true;
-  }
-
-  // launch nodes
-  for (let index = 0; index < N; index++) {
-    const newPromise = node(
-      index,
-      N,
-      F,
-      initialValues[index],
-      faultyList[index],
-      nodesAreReady,
-      setNodeIsReady
-    );
-    promises.push(newPromise);
-  }
-
-  const servers = await Promise.all(promises);
-
-  return servers;
+  // Attendre 500ms pour s'assurer que tous les nœuds sont bien lancés
+  await delay(500);
 }

@@ -1,3 +1,6 @@
+# TD5 - Blockchains and Decentralization
+[lien repo du prof](https://github.com/Gwen-M/Workshop5)
+
 # ben-or-consensus-algorithm
 
 Your goal for this exercise is to implement a version of the Ben Or consensus algorithm
