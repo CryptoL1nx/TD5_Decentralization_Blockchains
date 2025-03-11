@@ -15,3 +15,5 @@ export type ConsensusMessage = {
   x: 0 | 1 | null; // Valeur envoyée
   k: number; // Numéro de l'étape du consensus
 };
+
+export type Value = 0 | 1 | "?";
